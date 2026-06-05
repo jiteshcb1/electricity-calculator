@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Electricity Bill Calculator</title>
+<link rel="icon" type="image/png" href="krumos-logo.png" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0f11;
+    --surface: #16181c;
+    --surface2: #1e2026;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --accent: #f0c040;
+    --accent2: #e08020;
+    --text: #f0ede8;
+    --text2: #9a9690;
+    --text3: #5a5752;
+    --green: #3ecf7a;
+    --red: #e85454;
+    --blue: #4a9eff;
+    --font-head: 'Inter', sans-serif;
+    --font-mono: 'Inter', sans-serif;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-icon {
+    width: 44px; height: 44px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .header h1 {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .header p {
+    font-size: 12px;
+    color: var(--text2);
+    font-family: var(--font-mono);
+  }
+
+  .container { max-width: 1180px; margin: 0 auto; padding: 36px 40px 80px; }
+
+  /* Section labels */
+  .section-label {
+    font-family: var(--font-head);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .card-note {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 14px;
+    line-height: 1.5;
+  }
+
+  /* Tariff slider */
+  .tariff-block {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .tariff-label {
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+  .tariff-block input[type=range] {
+    -webkit-appearance: none;
+    flex: 1;
+    min-width: 180px;
+    height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .tariff-block input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--bg);
+    cursor: pointer;
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  .tariff-val {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+    min-width: 90px;
+    text-align: right;
+  }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead th {
+    font-family: var(--font-head);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  td { padding: 8px 12px; vertical-align: middle; }
+
+  td input[type=text], td input[type=number], td select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 6px 10px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  td input[type=text]:focus, td input[type=number]:focus, td select:focus {
+    border-color: var(--accent);
+  }
+  td input[type=number] { text-align: right; }
+  td select { cursor: pointer; }
+
+  .col-name { min-width: 180px; }
+  .col-num { width: 84px; }
+  .col-settings { width: 168px; }
+  .col-result { width: 96px; text-align: right; }
+  .col-share { width: 110px; }
+
+  /* Type-specific settings cell */
+  .settings-group { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+  .mini-field { display: flex; flex-direction: column; gap: 2px; }
+  .mini-label {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text3);
+    font-family: var(--font-head);
+    font-weight: 700;
+  }
+  .mini-select, .mini-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 5px 8px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .mini-select { cursor: pointer; width: 64px; }
+  .mini-input { width: 56px; text-align: right; }
+  .mini-select:focus, .mini-input:focus { border-color: var(--accent); }
+  .settings-none { color: var(--text3); font-size: 14px; padding-left: 4px; }
+
+  .btn-revert {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 6px;
+    padding: 5px 9px;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .btn-revert:hover { color: var(--accent); border-color: var(--accent); }
+
+  .result-val {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text2);
+    text-align: right;
+    white-space: nowrap;
+  }
+  .result-val.active { color: var(--text); }
+
+  /* Bar */
+  .share-bar-wrap {
+    background: var(--surface2);
+    border-radius: 3px;
+    height: 6px;
+    overflow: hidden;
+    min-width: 70px;
+  }
+  .share-bar {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--accent);
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .share-pct {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 3px;
+    text-align: right;
+  }
+
+  /* Delete btn */
+  .btn-del {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    line-height: 1;
+    transition: color 0.15s, background 0.15s;
+  }
+  .btn-del:hover { color: var(--red); background: rgba(232,84,84,0.1); }
+
+  /* Add row */
+  .btn-add {
+    background: none;
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius);
+    color: var(--text2);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 10px 16px;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.15s, border-color 0.15s;
+    width: 100%;
+  }
+  .btn-add:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Extra charges table */
+  .charges-table { width: 100%; border-collapse: collapse; }
+  .charges-table td { padding: 8px 12px; }
+  .charges-table tr { border-bottom: 1px solid var(--border); }
+  .charges-table tr:last-child { border-bottom: none; }
+  .charge-label {
+    font-size: 13px;
+    color: var(--text2);
+    width: 55%;
+    font-family: var(--font-mono);
+  }
+  .charge-input-wrap { display: flex; align-items: center; gap: 0; }
+  .charge-prefix {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+  .charge-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: none;
+    border-radius: 0 6px 6px 0;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 6px 10px;
+    width: 130px;
+    outline: none;
+    text-align: right;
+    transition: border-color 0.15s;
+  }
+  .charge-input:focus { border-color: var(--accent); }
+
+  /* Calculate button */
+  .btn-calc {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-lg);
+    color: #0e0f11;
+    cursor: pointer;
+    font-family: var(--font-head);
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 18px 32px;
+    margin: 28px 0;
+    transition: background 0.15s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .btn-calc:hover { background: #f5cc50; }
+  .btn-calc:active { transform: scale(0.98); }
+
+  /* Results section */
+  #results { display: none; }
+  #results.visible { display: block; }
+
+  .results-divider {
+    border: none;
+    border-top: 1px solid var(--border2);
+    margin: 8px 0 28px;
+  }
+
+  /* Metric cards */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .metric-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .metric-card.highlight {
+    border-color: var(--accent);
+    background: rgba(240,192,64,0.05);
+  }
+  .metric-card-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+    font-family: var(--font-head);
+  }
+  .metric-card-value {
+    font-family: var(--font-head);
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .metric-card.highlight .metric-card-value { color: var(--accent); }
+  .metric-card-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  /* Bill breakdown */
+  .bill-breakdown {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .bill-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .bill-row:last-child { border-bottom: none; }
+  .bill-row-label { color: var(--text2); }
+  .bill-row-val { font-family: var(--font-head); font-weight: 700; color: var(--text); }
+  .bill-row.total {
+    background: rgba(240,192,64,0.06);
+    border-top: 1px solid var(--border2);
+  }
+  .bill-row.total .bill-row-label {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .bill-row.total .bill-row-val {
+    font-size: 22px;
+    color: var(--accent);
+  }
+
+  /* Result table */
+  .result-table { margin-bottom: 24px; }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .container { padding: 20px 16px 60px; }
+    .header { padding: 20px 16px; }
+    .tariff-block { gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">⚡</div>
+  <div>
+    <h1>Electricity Bill Calculator</h1>
+    <p>India — CSPDCL / Any State Board</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Tariff Slider -->
+  <div class="section-label">Tariff Rate</div>
+  <div class="tariff-block">
+    <span class="tariff-label">₹ per unit (kWh)</span>
+    <input type="range" min="1" max="12" step="0.25" value="5.5" id="tariffSlider" />
+    <div class="tariff-val" id="tariffDisplay">₹5.50</div>
+  </div>
+
+  <!-- Appliances Table -->
+  <div class="section-label">Appliances</div>
+  <div class="card">
+    <div class="table-wrap">
+      <table id="applianceTable">
+        <thead>
+          <tr>
+            <th class="col-name">Appliance</th>
+            <th class="col-num">Qty</th>
+            <th class="col-num">W / piece</th>
+            <th class="col-settings">Settings</th>
+            <th class="col-num">Hrs/day</th>
+            <th class="col-num">Days/mo</th>
+            <th class="col-result">kWh/mo</th>
+            <th class="col-result">Cost/mo</th>
+            <th class="col-share">Share</th>
+            <th style="width:36px"></th>
+          </tr>
+        </thead>
+        <tbody id="applianceBody"></tbody>
+      </table>
+    </div>
+    <button class="btn-add" onclick="addAppliance()">
+      <span style="font-size:18px; line-height:1">+</span> Add appliance
+    </button>
+    <div class="card-note">
+      Pick a type from the dropdown to auto-fill a typical wattage — you can still edit it.
+      For an <strong>Air Conditioner</strong>, the tonnage sets the rated wattage and the set
+      temperature applies a duty-cycle factor (lower temp → compressor runs more → higher consumption).
+      Choose <strong>Manually Add Appliance</strong> to type your own name and wattage.
+    </div>
+  </div>
+
+  <!-- Extra Charges -->
+  <div class="section-label">Extra Charges</div>
+  <div class="card">
+    <table class="charges-table">
+      <tr>
+        <td class="charge-label">Meter Rent</td>
+        <td>
+          <div class="charge-input-wrap">
+            <span class="charge-prefix">₹</span>
+            <input class="charge-input" type="number" id="c_meter" placeholder="0" min="0" oninput="liveUpdate()" />
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="charge-label">Fixed Charges</td>
+        <td>
+          <div class="charge-input-wrap">
+            <span class="charge-prefix">₹</span>
+            <input class="charge-input" type="number" id="c_fixed" placeholder="0" min="0" oninput="liveUpdate()" />
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="charge-label">Electricity Duty</td>
+        <td>
+          <div class="charge-input-wrap">
+            <span class="charge-prefix">%</span>
+            <input class="charge-input" type="number" id="c_duty" placeholder="0" min="0" max="100" oninput="liveUpdate()" />
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="charge-label">FAC per Unit</td>
+        <td>
+          <div class="charge-input-wrap">
+            <span class="charge-prefix">₹</span>
+            <input class="charge-input" type="number" id="c_fac" placeholder="0.00" min="0" step="0.01" oninput="liveUpdate()" />
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="charge-label">Other</td>
+        <td>
+          <div class="charge-input-wrap">
+            <span class="charge-prefix">₹</span>
+            <input class="charge-input" type="number" id="c_other" placeholder="0" min="0" oninput="liveUpdate()" />
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Calculate Button -->
+  <button class="btn-calc" onclick="calculate()">
+    <span>⚡</span> Calculate Bill
+  </button>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="section-label">Summary</div>
+    <hr class="results-divider" />
+
+    <div class="metric-grid" id="metricGrid"></div>
+
+    <div class="section-label">Bill Breakdown</div>
+    <div class="bill-breakdown" id="billBreakdown"></div>
+
+    <div class="section-label" style="margin-top:24px">Appliance Breakdown</div>
+    <div class="card result-table">
+      <div class="table-wrap">
+        <table id="resultTable">
+          <thead>
+            <tr>
+              <th class="col-name">Appliance</th>
+              <th class="col-num">Qty</th>
+              <th class="col-num">W / pc</th>
+              <th class="col-num">Hrs/day</th>
+              <th class="col-num">Days</th>
+              <th class="col-result">kWh/mo</th>
+              <th class="col-result">Cost/mo</th>
+              <th class="col-share">Share</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer style="text-align:center; padding: 28px 16px; border-top: 1px solid var(--border); font-size: 13px; font-family: var(--font-mono); color: var(--text2);">
+  Made with ❤️ by <span style="color:#ffffff; font-weight:400;">Krumos Tech</span>
+</footer>
+
+<script>
+/* ---------- Appliance catalogue ---------- */
+// params: extra inputs shown in the Settings cell.
+// defaultWatt: typical W per piece (editable). For AC, watt comes from tonnage.
+const APPLIANCE_TYPES = {
+  ac:        { label: "Air Conditioner", params: ["tonnes","temp"], defaultWatt: null, defaults: { qty:1, tonnes:1.5, temp:24, hrs:7.5, days:26 } },
+  fan:       { label: "Ceiling Fan",      params: [], defaultWatt: 75,   defaults: { qty:1, hrs:9,  days:26 } },
+  cooler:    { label: "Air Cooler",       params: [], defaultWatt: 200,  defaults: { qty:1, hrs:8,  days:26 } },
+  light:     { label: "LED Bulb / Light", params: [], defaultWatt: 9,    defaults: { qty:1, hrs:3,  days:26 } },
+  tube:      { label: "Tube Light",       params: [], defaultWatt: 20,   defaults: { qty:1, hrs:4,  days:26 } },
+  fridge:    { label: "Refrigerator",     params: [], defaultWatt: 150,  defaults: { qty:1, hrs:24, days:30 } },
+  geyser:    { label: "Geyser / Water Heater", params: [], defaultWatt: 2000, defaults: { qty:1, hrs:0.5, days:26 } },
+  tv:        { label: "Television",       params: [], defaultWatt: 100,  defaults: { qty:1, hrs:5,  days:30 } },
+  laptop:    { label: "Laptop",           params: [], defaultWatt: 60,   defaults: { qty:1, hrs:6,  days:26 } },
+  desktop:   { label: "Desktop PC",       params: [], defaultWatt: 200,  defaults: { qty:1, hrs:6,  days:26 } },
+  monitor:   { label: "Monitor",          params: [], defaultWatt: 30,   defaults: { qty:1, hrs:8,  days:26 } },
+  phone:     { label: "Phone Charger",    params: [], defaultWatt: 20,   defaults: { qty:1, hrs:1.5,days:30 } },
+  router:    { label: "Wi-Fi Router",     params: [], defaultWatt: 10,   defaults: { qty:1, hrs:24, days:30 } },
+  washer:    { label: "Washing Machine",  params: [], defaultWatt: 500,  defaults: { qty:1, hrs:1,  days:12 } },
+  microwave: { label: "Microwave Oven",   params: [], defaultWatt: 1200, defaults: { qty:1, hrs:0.25,days:26 } },
+  iron:      { label: "Iron",             params: [], defaultWatt: 1000, defaults: { qty:1, hrs:0.5, days:8 } },
+  mixer:     { label: "Mixer / Grinder",  params: [], defaultWatt: 500,  defaults: { qty:1, hrs:0.25,days:26 } },
+  pump:      { label: "Water Pump",       params: [], defaultWatt: 750,  defaults: { qty:1, hrs:0.5, days:30 } },
+  custom:    { label: "Manually Add Appliance", params: [], defaultWatt: 0, custom: true, defaults: { qty:1, hrs:1, days:26 } },
+};
+
+// Rated wattage by AC tonnage
+const AC_WATT = { 0.75: 800, 1: 1000, 1.5: 1500, 2: 2000 };
+
+// Starting set
+const DEFAULT_APPLIANCES = [
+  { type: "ac",      qty: 1, tonnes: 2, temp: 22, hrs: 7.5, days: 26 },
+  { type: "fan",     qty: 2, watt: 75, hrs: 9,    days: 26 },
+  { type: "light",   qty: 8, watt: 9,  hrs: 3,    days: 26 },
+  { type: "geyser",  qty: 1, watt: 1300, hrs: 0.33, days: 26 },
+  { type: "laptop",  qty: 5, watt: 60, hrs: 3,    days: 26 },
+  { type: "monitor", qty: 2, watt: 30, hrs: 8,    days: 26 },
+  { type: "phone",   qty: 5, watt: 20, hrs: 1.5,  days: 30 },
+];
+
+let rowCount = 0;
+
+/* ---------- Helpers ---------- */
+function getTariff() {
+  return parseFloat(document.getElementById('tariffSlider').value) || 5.5;
+}
+
+// Duty-cycle factor for AC based on set temperature (estimate).
+function getDuty(temp) {
+  const f = 0.6 + (24 - temp) * 0.05;
+  return Math.max(0.2, Math.min(1.0, f));
+}
+
+function buildOptions(selected) {
+  return Object.entries(APPLIANCE_TYPES)
+    .map(([key, t]) => `<option value="${key}" ${key === selected ? 'selected' : ''}>${t.label}</option>`)
+    .join('');
+}
+
+/* ---------- Name cell (dropdown <-> manual text) ---------- */
+function renderNameCell(id, type, customName) {
+  const cell = document.getElementById('namecell_' + id);
+  if (type === 'custom') {
+    cell.innerHTML = `
+      <div style="display:flex; gap:6px; align-items:center">
+        <input type="text" class="appl-text" placeholder="Type appliance name" value="${customName || ''}" oninput="liveUpdate()" />
+        <button class="btn-revert" title="Back to list" onclick="revertToDropdown(${id})">↺</button>
+      </div>`;
+  } else {
+    cell.innerHTML = `<select class="appl-select" onchange="onTypeChange(${id}, this.value)">${buildOptions(type)}</select>`;
+  }
+}
+
+/* ---------- Settings cell (type-specific fields) ---------- */
+function renderSettings(id, type, tonnes, temp) {
+  const cell = document.getElementById('settings_' + id);
+  const t = APPLIANCE_TYPES[type];
+  if (t.params.includes('tonnes')) {
+    cell.innerHTML = `
+      <div class="settings-group">
+        <div class="mini-field">
+          <span class="mini-label">Tonnes</span>
+          <select class="mini-select f-tonnes" onchange="onTonnesChange(${id}, this.value)">
+            ${[0.75, 1, 1.5, 2].map(v => `<option value="${v}" ${Number(v) === Number(tonnes) ? 'selected' : ''}>${v}</option>`).join('')}
+          </select>
+        </div>
+        <div class="mini-field">
+          <span class="mini-label">Temp °C</span>
+          <input type="number" class="mini-input f-temp" min="16" max="30" value="${temp}" oninput="liveUpdate()" />
+        </div>
+      </div>`;
+  } else {
+    cell.innerHTML = `<span class="settings-none">—</span>`;
+  }
+}
+
+/* ---------- Events ---------- */
+function onTypeChange(id, newType) {
+  const row = document.getElementById('row_' + id);
+  row.dataset.type = newType;
+  const t = APPLIANCE_TYPES[newType];
+  const tonnes = t.defaults && t.defaults.tonnes != null ? t.defaults.tonnes : 1.5;
+  const temp = t.defaults && t.defaults.temp != null ? t.defaults.temp : 24;
+
+  // Auto-fill wattage
+  let watt = (newType === 'ac') ? AC_WATT[tonnes] : (t.defaultWatt || 0);
+  row.querySelector('.f-watt').value = watt;
+
+  // Apply sensible defaults for usage
+  if (t.defaults) {
+    if (t.defaults.qty != null)  row.querySelector('.f-qty').value = t.defaults.qty;
+    if (t.defaults.hrs != null)  row.querySelector('.f-hrs').value = t.defaults.hrs;
+    if (t.defaults.days != null) row.querySelector('.f-days').value = t.defaults.days;
+  }
+
+  renderNameCell(id, newType);
+  renderSettings(id, newType, tonnes, temp);
+  liveUpdate();
+}
+
+function onTonnesChange(id, val) {
+  const row = document.getElementById('row_' + id);
+  row.querySelector('.f-watt').value = AC_WATT[val] || 1500;
+  liveUpdate();
+}
+
+function revertToDropdown(id) {
+  // Switch a manual row back to the dropdown (defaults to Ceiling Fan)
+  onTypeChange(id, 'fan');
+}
+
+/* ---------- Add / delete rows ---------- */
+function addAppliance(data) {
+  data = data || { type: 'light' };
+  rowCount++;
+  const id = rowCount;
+  const type = data.type || 'light';
+  const t = APPLIANCE_TYPES[type];
+
+  const tonnes = data.tonnes != null ? data.tonnes : (t.defaults && t.defaults.tonnes != null ? t.defaults.tonnes : 1.5);
+  const temp   = data.temp   != null ? data.temp   : (t.defaults && t.defaults.temp   != null ? t.defaults.temp   : 24);
+  let watt = data.watt;
+  if (watt == null) watt = (type === 'ac') ? AC_WATT[tonnes] : (t.defaultWatt || 0);
+  const qty  = data.qty  != null ? data.qty  : (t.defaults && t.defaults.qty  != null ? t.defaults.qty  : 1);
+  const hrs  = data.hrs  != null ? data.hrs  : (t.defaults && t.defaults.hrs  != null ? t.defaults.hrs  : 1);
+  const days = data.days != null ? data.days : (t.defaults && t.defaults.days != null ? t.defaults.days : 26);
+
+  const tbody = document.getElementById('applianceBody');
+  const tr = document.createElement('tr');
+  tr.id = 'row_' + id;
+  tr.dataset.type = type;
+  tr.innerHTML = `
+    <td class="col-name" id="namecell_${id}"></td>
+    <td class="col-num"><input class="f-qty" type="number" min="0" value="${qty}" oninput="liveUpdate()" /></td>
+    <td class="col-num"><input class="f-watt" type="number" min="0" value="${watt}" oninput="liveUpdate()" /></td>
+    <td class="col-settings" id="settings_${id}"></td>
+    <td class="col-num"><input class="f-hrs" type="number" min="0" step="0.01" value="${hrs}" oninput="liveUpdate()" /></td>
+    <td class="col-num"><input class="f-days" type="number" min="0" max="31" value="${days}" oninput="liveUpdate()" /></td>
+    <td class="col-result"><div class="result-val" id="kwh_${id}">—</div></td>
+    <td class="col-result"><div class="result-val" id="cost_${id}">—</div></td>
+    <td class="col-share">
+      <div class="share-bar-wrap"><div class="share-bar" id="bar_${id}"></div></div>
+      <div class="share-pct" id="pct_${id}">—</div>
+    </td>
+    <td><button class="btn-del" onclick="deleteRow(${id})" title="Remove">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  renderNameCell(id, type, data.name);
+  renderSettings(id, type, tonnes, temp);
+  liveUpdate();
+}
+
+function deleteRow(id) {
+  const row = document.getElementById('row_' + id);
+  if (row) row.remove();
+  liveUpdate();
+}
+
+/* ---------- Read rows ---------- */
+function getRows() {
+  const rows = [];
+  document.querySelectorAll('#applianceBody tr').forEach(tr => {
+    const type = tr.dataset.type;
+    const t = APPLIANCE_TYPES[type];
+    const qty  = parseFloat(tr.querySelector('.f-qty')?.value)  || 0;
+    const wpp  = parseFloat(tr.querySelector('.f-watt')?.value) || 0;
+    const hrs  = parseFloat(tr.querySelector('.f-hrs')?.value)  || 0;
+    const days = parseFloat(tr.querySelector('.f-days')?.value) || 0;
+
+    let temp = null, tonnes = null, duty = 1;
+    if (type === 'ac') {
+      tonnes = parseFloat(tr.querySelector('.f-tonnes')?.value) || 1.5;
+      temp = parseFloat(tr.querySelector('.f-temp')?.value);
+      if (isNaN(temp)) temp = 24;
+      duty = getDuty(temp);
+    }
+
+    const effWatt = wpp * duty;
+    const kwh = (effWatt / 1000) * hrs * days * qty;
+
+    let name;
+    if (type === 'custom') {
+      name = (tr.querySelector('.appl-text')?.value || '').trim() || 'Custom appliance';
+    } else {
+      name = t.label;
+      if (type === 'ac') name += ` (${tonnes}T @${temp}°C)`;
+      if (qty > 1) name += ` × ${qty}`;
+    }
+
+    rows.push({ type, name, qty, wpp, effWatt, hrs, days, kwh, temp, tonnes });
+  });
+  return rows;
+}
+
+/* ---------- Live per-row update ---------- */
+function liveUpdate() {
+  const tariff = getTariff();
+  const rows = getRows();
+  const totalKwh = rows.reduce((s, r) => s + r.kwh, 0);
+
+  document.querySelectorAll('#applianceBody tr').forEach((tr, i) => {
+    const r = rows[i];
+    if (!r) return;
+    const id = tr.id.replace('row_', '');
+    const cost = r.kwh * tariff;
+    const pct = totalKwh > 0 ? (r.kwh / totalKwh) * 100 : 0;
+
+    const kwhEl = document.getElementById('kwh_' + id);
+    const costEl = document.getElementById('cost_' + id);
+    const barEl = document.getElementById('bar_' + id);
+    const pctEl = document.getElementById('pct_' + id);
+
+    if (kwhEl) {
+      kwhEl.textContent = r.kwh > 0 ? r.kwh.toFixed(2) : '—';
+      kwhEl.className = 'result-val' + (r.kwh > 0 ? ' active' : '');
+    }
+    if (costEl) {
+      costEl.textContent = r.kwh > 0 ? '₹' + Math.round(cost).toLocaleString('en-IN') : '—';
+      costEl.className = 'result-val' + (r.kwh > 0 ? ' active' : '');
+    }
+    if (barEl) barEl.style.width = pct.toFixed(1) + '%';
+    if (pctEl) pctEl.textContent = r.kwh > 0 ? pct.toFixed(1) + '%' : '—';
+  });
+}
+
+/* ---------- Full calculation ---------- */
+function calculate() {
+  const tariff = getTariff();
+  const rows = getRows().filter(r => r.kwh > 0);
+  if (rows.length === 0) {
+    alert('Please add at least one appliance with valid values.');
+    return;
+  }
+
+  const totalKwh = rows.reduce((s, r) => s + r.kwh, 0);
+  const energyCost = totalKwh * tariff;
+  const dailyKwh = totalKwh / 30;
+
+  const meter = parseFloat(document.getElementById('c_meter').value) || 0;
+  const fixed = parseFloat(document.getElementById('c_fixed').value) || 0;
+  const dutyPct = parseFloat(document.getElementById('c_duty').value) || 0;
+  const facPerUnit = parseFloat(document.getElementById('c_fac').value) || 0;
+  const other = parseFloat(document.getElementById('c_other').value) || 0;
+
+  const facCharge = totalKwh * facPerUnit;
+  const dutyCharge = (energyCost * dutyPct) / 100;
+  const totalBill = energyCost + meter + fixed + dutyCharge + facCharge + other;
+
+  const sorted = [...rows].sort((a, b) => b.kwh - a.kwh);
+  const maxKwh = sorted[0].kwh;
+
+  // Metrics
+  document.getElementById('metricGrid').innerHTML = `
+    <div class="metric-card">
+      <div class="metric-card-label">Daily Usage</div>
+      <div class="metric-card-value">${dailyKwh.toFixed(2)}</div>
+      <div class="metric-card-sub">kWh / day</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-card-label">Monthly Units</div>
+      <div class="metric-card-value">${totalKwh.toFixed(1)}</div>
+      <div class="metric-card-sub">kWh / month</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-card-label">Energy Cost</div>
+      <div class="metric-card-value">₹${Math.round(energyCost).toLocaleString('en-IN')}</div>
+      <div class="metric-card-sub">before extra charges</div>
+    </div>
+    <div class="metric-card highlight">
+      <div class="metric-card-label">Total Bill</div>
+      <div class="metric-card-value">₹${Math.round(totalBill).toLocaleString('en-IN')}</div>
+      <div class="metric-card-sub">all charges included</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-card-label">Top Consumer</div>
+      <div class="metric-card-value" style="font-size:16px">${sorted[0].name.split('(')[0].trim().split('×')[0].trim()}</div>
+      <div class="metric-card-sub">${sorted[0].kwh.toFixed(1)} kWh — ${((sorted[0].kwh / totalKwh) * 100).toFixed(1)}% of total</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-card-label">Tariff Used</div>
+      <div class="metric-card-value">₹${tariff.toFixed(2)}</div>
+      <div class="metric-card-sub">per unit (kWh)</div>
+    </div>
+  `;
+
+  // Bill breakdown
+  let breakdown = '';
+  breakdown += billRow('Energy charges', energyCost);
+  if (facCharge > 0) breakdown += billRow('FAC charges (' + totalKwh.toFixed(1) + ' × ₹' + facPerUnit + ')', facCharge);
+  if (dutyCharge > 0) breakdown += billRow('Electricity duty (' + dutyPct + '%)', dutyCharge);
+  if (meter > 0) breakdown += billRow('Meter rent', meter);
+  if (fixed > 0) breakdown += billRow('Fixed charges', fixed);
+  if (other > 0) breakdown += billRow('Other charges', other);
+  breakdown += `
+    <div class="bill-row total">
+      <span class="bill-row-label">Total Payable</span>
+      <span class="bill-row-val">₹${Math.round(totalBill).toLocaleString('en-IN')}</span>
+    </div>`;
+  document.getElementById('billBreakdown').innerHTML = breakdown;
+
+  // Result table
+  document.getElementById('resultBody').innerHTML = sorted.map(r => {
+    const cost = r.kwh * tariff;
+    const pct = (r.kwh / totalKwh) * 100;
+    const barW = Math.round((r.kwh / maxKwh) * 100);
+    const wattCell = (r.type === 'ac')
+      ? `${r.wpp} <span style="color:var(--text3)">(eff ${Math.round(r.effWatt)})</span>`
+      : `${r.wpp}`;
+    return `
+      <tr>
+        <td>${r.name}</td>
+        <td style="text-align:right">${r.qty}</td>
+        <td style="text-align:right">${wattCell}</td>
+        <td style="text-align:right">${r.hrs < 0.5 ? Math.round(r.hrs * 60) + ' min' : r.hrs}</td>
+        <td style="text-align:right">${r.days}</td>
+        <td style="text-align:right; font-family:var(--font-head); font-weight:600">${r.kwh.toFixed(2)}</td>
+        <td style="text-align:right; font-family:var(--font-head); font-weight:600">₹${Math.round(cost).toLocaleString('en-IN')}</td>
+        <td>
+          <div class="share-bar-wrap"><div class="share-bar" style="width:${barW}%"></div></div>
+          <div class="share-pct">${pct.toFixed(1)}%</div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  const results = document.getElementById('results');
+  results.classList.add('visible');
+  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function billRow(label, val) {
+  return `<div class="bill-row"><span class="bill-row-label">${label}</span><span class="bill-row-val">₹${Math.round(val).toLocaleString('en-IN')}</span></div>`;
+}
+
+/* ---------- Tariff slider ---------- */
+const slider = document.getElementById('tariffSlider');
+const display = document.getElementById('tariffDisplay');
+slider.addEventListener('input', () => {
+  display.textContent = '₹' + parseFloat(slider.value).toFixed(2);
+  liveUpdate();
+});
+
+/* ---------- Init ---------- */
+DEFAULT_APPLIANCES.forEach(a => addAppliance(a));
+</script>
+</body>
+</html>
